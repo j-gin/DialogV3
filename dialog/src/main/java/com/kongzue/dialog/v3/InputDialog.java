@@ -1,9 +1,12 @@
 package com.kongzue.dialog.v3;
 
-import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
+import android.os.IBinder;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -14,14 +17,14 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kongzue.dialog.R;
-import com.kongzue.dialog.interfaces.DialogLifeCycleListener;
+import com.kongzue.dialog.interfaces.OnBackClickListener;
 import com.kongzue.dialog.interfaces.OnDialogButtonClickListener;
 import com.kongzue.dialog.interfaces.OnShowListener;
 import com.kongzue.dialog.interfaces.OnDismissListener;
@@ -44,7 +47,7 @@ import java.lang.reflect.Field;
 public class InputDialog extends MessageDialog {
     
     private String inputText = "";
-    private String hintText;
+    private CharSequence hintText;
     
     private OnInputDialogButtonClickListener onOkButtonClickListener;
     private OnInputDialogButtonClickListener onCancelButtonClickListener;
@@ -56,8 +59,12 @@ public class InputDialog extends MessageDialog {
     public static InputDialog build(@NonNull AppCompatActivity context) {
         synchronized (InputDialog.class) {
             InputDialog inputDialog = new InputDialog();
-            inputDialog.log("装载输入对话框");
+            inputDialog.log("装载对话框: " + inputDialog.toString());
             inputDialog.context = new WeakReference<>(context);
+            
+            inputDialog.okButtonDrawable = DialogSettings.okButtonDrawable;
+            inputDialog.cancelButtonDrawable = DialogSettings.cancelButtonDrawable;
+            inputDialog.otherButtonDrawable = DialogSettings.otherButtonDrawable;
             
             switch (inputDialog.style) {
                 case STYLE_IOS:
@@ -69,20 +76,23 @@ public class InputDialog extends MessageDialog {
                 case STYLE_MATERIAL:
                     inputDialog.build(inputDialog);
                     break;
+                case STYLE_MIUI:
+                    inputDialog.build(inputDialog, R.layout.dialog_select_miui);
+                    break;
             }
             return inputDialog;
         }
     }
     
-    public static InputDialog show(@NonNull AppCompatActivity context, String title, String message) {
-        synchronized (TipDialog.class) {
+    public static InputDialog show(@NonNull AppCompatActivity context, CharSequence title, CharSequence message) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(context, title, message, null, null, null);
             return inputDialog;
         }
     }
     
     public static InputDialog show(@NonNull AppCompatActivity context, int titleResId, int messageResId) {
-        synchronized (TipDialog.class) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(context,
                     context.getString(titleResId),
                     context.getString(messageResId),
@@ -92,15 +102,15 @@ public class InputDialog extends MessageDialog {
         }
     }
     
-    public static InputDialog show(@NonNull AppCompatActivity context, String title, String message, String okButton) {
-        synchronized (TipDialog.class) {
+    public static InputDialog show(@NonNull AppCompatActivity context, CharSequence title, CharSequence message, CharSequence okButton) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(context, title, message, okButton, null, null);
             return inputDialog;
         }
     }
     
     public static InputDialog show(@NonNull AppCompatActivity context, int titleResId, int messageResId, int okButtonResId) {
-        synchronized (TipDialog.class) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(context,
                     context.getString(titleResId),
                     context.getString(messageResId),
@@ -111,15 +121,15 @@ public class InputDialog extends MessageDialog {
         }
     }
     
-    public static InputDialog show(@NonNull AppCompatActivity context, String title, String message, String okButton, String cancelButton) {
-        synchronized (TipDialog.class) {
+    public static InputDialog show(@NonNull AppCompatActivity context, CharSequence title, CharSequence message, CharSequence okButton, CharSequence cancelButton) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(context, title, message, okButton, cancelButton, null);
             return inputDialog;
         }
     }
     
     public static InputDialog show(@NonNull AppCompatActivity context, int titleResId, int messageResId, int okButtonResId, int cancelButtonResId) {
-        synchronized (TipDialog.class) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(
                     context,
                     context.getString(titleResId),
@@ -132,8 +142,8 @@ public class InputDialog extends MessageDialog {
         }
     }
     
-    public static InputDialog show(@NonNull AppCompatActivity context, String title, String message, String okButton, String cancelButton, String otherButton) {
-        synchronized (TipDialog.class) {
+    public static InputDialog show(@NonNull AppCompatActivity context, CharSequence title, CharSequence message, CharSequence okButton, CharSequence cancelButton, CharSequence otherButton) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = build(context);
             
             inputDialog.title = title;
@@ -148,7 +158,7 @@ public class InputDialog extends MessageDialog {
     }
     
     public static InputDialog show(@NonNull AppCompatActivity context, int titleResId, int messageResId, int okButtonResId, int cancelButtonResId, int otherButtonResId) {
-        synchronized (TipDialog.class) {
+        synchronized (InputDialog.class) {
             InputDialog inputDialog = show(
                     context,
                     context.getString(titleResId),
@@ -162,42 +172,55 @@ public class InputDialog extends MessageDialog {
     }
     
     private LinearLayout materialCustomViewBox;
+    private IBinder windowToken;
     
     @Override
     public void refreshView() {
         super.refreshView();
-        log("InputDialog:refreshView");
         if (style == DialogSettings.STYLE.STYLE_MATERIAL) {
             if (materialAlertDialog != null) {
-                if (inputText != null) {
-                    if (customView == null) {
-                        txtInput = new EditText(context.get());
-                        txtInput.setSingleLine();
-                        txtInput.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) txtInput.getLayoutParams();
-                                p.setMargins(dip2px(20), 0, dip2px(20), 0);
-                                txtInput.requestLayout();
+                if (txtInput == null) {
+                    //初始化的情况
+                    txtInput = new EditText(context.get());
+                    txtInput.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) txtInput.getLayoutParams();
+                            p.setMargins(dip2px(20), 0, dip2px(20), 0);
+                            txtInput.requestLayout();
+                        }
+                    });
+                    txtInput.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (txtInput != null) {
+                                if (DialogSettings.autoShowInputKeyboard && txtInput.getVisibility() == View.VISIBLE) {
+                                    txtInput.setFocusable(true);
+                                    txtInput.setFocusableInTouchMode(true);
+                                    txtInput.requestFocus();
+                                    windowToken = txtInput.getWindowToken();
+                                    InputMethodManager imm = (InputMethodManager) context.get().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                    imm.showSoftInput(txtInput, InputMethodManager.SHOW_IMPLICIT);
+                                }
                             }
-                        });
+                        }
+                    }, 100);
+                    
+                    if (buttonTextInfo != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            txtInput.setBackgroundTintList(ColorStateList.valueOf(buttonTextInfo.getFontColor()));
+                        }
+                    }
+                    if (customView == null) {
                         materialAlertDialog.setView(txtInput);
                     } else {
-                        txtInput = new EditText(context.get());
-                        txtInput.setSingleLine();
-                        txtInput.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                ViewGroup.MarginLayoutParams p = (ViewGroup.MarginLayoutParams) txtInput.getLayoutParams();
-                                p.setMargins(dip2px(20), 0, dip2px(20), 0);
-                                txtInput.requestLayout();
-                            }
-                        });
-                        
                         if (boxCustom != null) boxCustom.removeAllViews();
                         if (materialCustomViewBox != null) materialCustomViewBox.removeAllViews();
                         materialCustomViewBox = new LinearLayout(context.get());
                         materialCustomViewBox.setOrientation(LinearLayout.VERTICAL);
+                        if (customView.getParent() != null && customView.getParent() instanceof ViewGroup) {
+                            ((ViewGroup) customView.getParent()).removeView(customView);
+                        }
                         materialCustomViewBox.addView(customView);
                         materialCustomViewBox.addView(txtInput);
                         
@@ -205,83 +228,90 @@ public class InputDialog extends MessageDialog {
                         
                         materialAlertDialog.setView(materialCustomViewBox);
                     }
-                }
-                materialAlertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                    @Override
-                    public void onShow(DialogInterface dialog) {
-                        Button positiveButton = materialAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                        positiveButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (onOkButtonClickListener != null) {
-                                    if (!onOkButtonClickListener.onClick(InputDialog.this, v, getInputText()))
-                                        materialAlertDialog.dismiss();
-                                } else {
-                                    materialAlertDialog.dismiss();
-                                }
-                            }
-                        });
-                        useTextInfo(positiveButton, buttonPositiveTextInfo);
-                        
-                        Button negativeButton = materialAlertDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
-                        negativeButton.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                if (onCancelButtonClickListener != null) {
-                                    if (!onCancelButtonClickListener.onClick(InputDialog.this, v, getInputText()))
-                                        materialAlertDialog.dismiss();
-                                } else {
-                                    materialAlertDialog.dismiss();
-                                }
-                            }
-                        });
-                        useTextInfo(negativeButton, buttonTextInfo);
-                        
-                        if (otherButton != null) {
-                            Button otherButton = materialAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
-                            otherButton.setOnClickListener(new View.OnClickListener() {
+                    materialAlertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                        @Override
+                        public void onShow(DialogInterface dialog) {
+                            Button positiveButton = materialAlertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                            positiveButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    if (onOtherButtonClickListener != null) {
-                                        if (!onOtherButtonClickListener.onClick(InputDialog.this, v, getInputText()))
+                                    hideInputKeyboard();
+                                    if (onOkButtonClickListener != null) {
+                                        if (!onOkButtonClickListener.onClick(InputDialog.this, v, getInputText()))
                                             materialAlertDialog.dismiss();
                                     } else {
                                         materialAlertDialog.dismiss();
                                     }
                                 }
                             });
-                            useTextInfo(otherButton, buttonTextInfo);
-                        }
-                        try {
-                            Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
-                            mAlert.setAccessible(true);
-                            Object mAlertController = mAlert.get(dialog);
+                            useTextInfo(positiveButton, buttonPositiveTextInfo);
                             
-                            if (titleTextInfo != null) {
-                                Field mTitle = mAlertController.getClass().getDeclaredField("mTitleView");
-                                mTitle.setAccessible(true);
-                                TextView titleTextView = (TextView) mTitle.get(mAlertController);
-                                useTextInfo(titleTextView, titleTextInfo);
+                            Button negativeButton = materialAlertDialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                            negativeButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    hideInputKeyboard();
+                                    if (onCancelButtonClickListener != null) {
+                                        if (!onCancelButtonClickListener.onClick(InputDialog.this, v, getInputText()))
+                                            materialAlertDialog.dismiss();
+                                    } else {
+                                        materialAlertDialog.dismiss();
+                                    }
+                                }
+                            });
+                            useTextInfo(negativeButton, buttonTextInfo);
+                            
+                            if (otherButton != null) {
+                                Button otherButton = materialAlertDialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+                                otherButton.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        hideInputKeyboard();
+                                        if (onOtherButtonClickListener != null) {
+                                            if (!onOtherButtonClickListener.onClick(InputDialog.this, v, getInputText()))
+                                                materialAlertDialog.dismiss();
+                                        } else {
+                                            materialAlertDialog.dismiss();
+                                        }
+                                    }
+                                });
+                                useTextInfo(otherButton, buttonTextInfo);
+                            }
+                            try {
+                                Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
+                                mAlert.setAccessible(true);
+                                Object mAlertController = mAlert.get(dialog);
+                                
+                                if (titleTextInfo != null) {
+                                    Field mTitle = mAlertController.getClass().getDeclaredField("mTitleView");
+                                    mTitle.setAccessible(true);
+                                    TextView titleTextView = (TextView) mTitle.get(mAlertController);
+                                    useTextInfo(titleTextView, titleTextInfo);
+                                }
+                                
+                                if (messageTextInfo != null) {
+                                    Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
+                                    mMessage.setAccessible(true);
+                                    TextView messageTextView = (TextView) mMessage.get(mAlertController);
+                                    useTextInfo(messageTextView, messageTextInfo);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
                             }
                             
-                            if (messageTextInfo != null) {
-                                Field mMessage = mAlertController.getClass().getDeclaredField("mMessageView");
-                                mMessage.setAccessible(true);
-                                TextView messageTextView = (TextView) mMessage.get(mAlertController);
-                                useTextInfo(messageTextView, messageTextInfo);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
                         }
-                        
-                    }
-                });
+                    });
+                }
             }
         } else {
+            if (boxInput != null) {
+                boxInput.setMaxHeight(dip2px(100));
+            }
             if (btnSelectPositive != null) {
                 btnSelectPositive.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        hideInputKeyboard();
                         if (onOkButtonClickListener != null) {
                             if (!onOkButtonClickListener.onClick(InputDialog.this, v, getInputText())) {
                                 doDismiss();
@@ -296,8 +326,9 @@ public class InputDialog extends MessageDialog {
                 btnSelectNegative.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        hideInputKeyboard();
                         if (onCancelButtonClickListener != null) {
-                            if (!onCancelButtonClickListener.onClick(InputDialog.this, v, getInputText())) {
+                            if (!onCancelButtonClickListener.onClick(InputDialog.this, v, getInputText().toString())) {
                                 doDismiss();
                             }
                         } else {
@@ -310,8 +341,9 @@ public class InputDialog extends MessageDialog {
                 btnSelectOther.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        hideInputKeyboard();
                         if (onOtherButtonClickListener != null) {
-                            if (!onOtherButtonClickListener.onClick(InputDialog.this, v, getInputText())) {
+                            if (!onOtherButtonClickListener.onClick(InputDialog.this, v, getInputText().toString())) {
                                 doDismiss();
                             }
                         } else {
@@ -320,70 +352,85 @@ public class InputDialog extends MessageDialog {
                     }
                 });
             }
-            refreshTextViews();
-        }
-        
-        if (txtInput != null) {
-            if (inputText != null) {
-                if (theme == DialogSettings.THEME.DARK) {
-                    txtInput.setTextColor(Color.WHITE);
-                    txtInput.setHintTextColor(context.get().getResources().getColor(R.color.whiteAlpha30));
-                }
-                txtInput.setText(inputText);
-                txtInput.setHint(hintText);
-                if (inputInfo != null) {
-                    if (inputInfo.getMAX_LENGTH() != -1)
-                        txtInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(inputInfo.getMAX_LENGTH())});
-                    txtInput.setInputType(InputType.TYPE_CLASS_TEXT | inputInfo.getInputType());
-                    if (inputInfo.getTextInfo() != null)
-                        useTextInfo(txtInput, inputInfo.getTextInfo());
-                }
-                txtInput.setVisibility(View.VISIBLE);
-            } else {
-                txtInput.setVisibility(View.GONE);
+            if (txtInput != null) {
+                txtInput.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (txtInput != null) {
+                            if (DialogSettings.autoShowInputKeyboard && txtInput.getVisibility() == View.VISIBLE) {
+                                txtInput.setFocusable(true);
+                                txtInput.setFocusableInTouchMode(true);
+                                txtInput.requestFocus();
+                                windowToken = txtInput.getWindowToken();
+                                InputMethodManager imm = (InputMethodManager) context.get().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                imm.showSoftInput(txtInput, InputMethodManager.SHOW_IMPLICIT);
+                            }
+                        }
+                    }
+                }, 100);
             }
         }
+        refreshTextViews();
     }
     
     @Override
     protected void refreshTextViews() {
+        log(txtInput == null);
         super.refreshTextViews();
         if (txtInput != null) {
-            if (inputText != null) {
-                if (theme == DialogSettings.THEME.DARK) {
-                    txtInput.setTextColor(Color.WHITE);
-                    txtInput.setHintTextColor(context.get().getResources().getColor(R.color.whiteAlpha30));
-                }
-                txtInput.setText(inputText);
-                txtInput.setHint(hintText);
-                if (inputInfo != null) {
-                    if (inputInfo.getMAX_LENGTH() != -1)
-                        txtInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(inputInfo.getMAX_LENGTH())});
-                    txtInput.setInputType(InputType.TYPE_CLASS_TEXT | inputInfo.getInputType());
-                    if (inputInfo.getTextInfo() != null)
-                        useTextInfo(txtInput, inputInfo.getTextInfo());
-                }
-                txtInput.setVisibility(View.VISIBLE);
-            } else {
-                txtInput.setVisibility(View.GONE);
+            txtInput.setText(inputText);
+            txtInput.setSelection(inputText.length());
+            txtInput.setVisibility(View.VISIBLE);
+            
+            if (theme == DialogSettings.THEME.DARK) {
+                txtInput.setTextColor(Color.WHITE);
+                txtInput.setHintTextColor(context.get().getResources().getColor(R.color.whiteAlpha30));
             }
+            txtInput.setHint(hintText);
+            if (inputInfo != null) {
+                if (inputInfo.getMAX_LENGTH() != -1)
+                    txtInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(inputInfo.getMAX_LENGTH())});
+                int inputType = InputType.TYPE_CLASS_TEXT | inputInfo.getInputType();
+                if (inputInfo.isMultipleLines()) {
+                    inputType = inputType | InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+                }
+                txtInput.setInputType(inputType);
+                if (inputInfo.getTextInfo() != null)
+                    useTextInfo(txtInput, inputInfo.getTextInfo());
+                
+                if (inputInfo.isSelectAllText()) {
+                    txtInput.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            txtInput.selectAll();
+                        }
+                    });
+                }
+            }
+        }
+    }
+    
+    public void hideInputKeyboard() {
+        if (windowToken != null) {
+            InputMethodManager imm = (InputMethodManager) context.get().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(windowToken, 0);
         }
     }
     
     public String getInputText() {
         if (txtInput == null) {
-            return inputText;
+            return inputText.toString();
         } else {
             return txtInput.getText().toString();
         }
     }
     
     //其他设置
-    public String getTitle() {
+    public CharSequence getTitle() {
         return title;
     }
     
-    public InputDialog setTitle(String title) {
+    public InputDialog setTitle(CharSequence title) {
         this.title = title;
         return this;
     }
@@ -393,11 +440,11 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public String getMessage() {
+    public CharSequence getMessage() {
         return message;
     }
     
-    public InputDialog setMessage(String content) {
+    public InputDialog setMessage(CharSequence content) {
         this.message = content;
         return this;
     }
@@ -407,11 +454,11 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public String getOkButton() {
+    public CharSequence getOkButton() {
         return okButton;
     }
     
-    public InputDialog setOkButton(String okButton) {
+    public InputDialog setOkButton(CharSequence okButton) {
         this.okButton = okButton;
         refreshView();
         return this;
@@ -422,7 +469,7 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public InputDialog setOkButton(String okButton, OnInputDialogButtonClickListener
+    public InputDialog setOkButton(CharSequence okButton, OnInputDialogButtonClickListener
             onOkButtonClickListener) {
         this.okButton = okButton;
         this.onOkButtonClickListener = onOkButtonClickListener;
@@ -442,11 +489,11 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public String getCancelButton() {
+    public CharSequence getCancelButton() {
         return cancelButton;
     }
     
-    public InputDialog setCancelButton(String cancelButton) {
+    public InputDialog setCancelButton(CharSequence cancelButton) {
         this.cancelButton = cancelButton;
         refreshView();
         return this;
@@ -457,7 +504,7 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public InputDialog setCancelButton(String cancelButton, OnInputDialogButtonClickListener
+    public InputDialog setCancelButton(CharSequence cancelButton, OnInputDialogButtonClickListener
             onCancelButtonClickListener) {
         this.cancelButton = cancelButton;
         this.onCancelButtonClickListener = onCancelButtonClickListener;
@@ -478,11 +525,11 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public String getOtherButton() {
+    public CharSequence getOtherButton() {
         return otherButton;
     }
     
-    public InputDialog setOtherButton(String otherButton) {
+    public InputDialog setOtherButton(CharSequence otherButton) {
         this.otherButton = otherButton;
         refreshView();
         return this;
@@ -494,7 +541,7 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public InputDialog setOtherButton(String otherButton, OnInputDialogButtonClickListener
+    public InputDialog setOtherButton(CharSequence otherButton, OnInputDialogButtonClickListener
             onOtherButtonClickListener) {
         this.otherButton = otherButton;
         this.onOtherButtonClickListener = onOtherButtonClickListener;
@@ -660,7 +707,10 @@ public class InputDialog extends MessageDialog {
                 build(this, R.layout.dialog_select);
                 break;
             case STYLE_MATERIAL:
-                
+                build(this);
+                break;
+            case STYLE_MIUI:
+                build(this, R.layout.dialog_select_miui);
                 break;
         }
         
@@ -689,7 +739,7 @@ public class InputDialog extends MessageDialog {
     
     public InputDialog setCancelable(boolean enable) {
         this.cancelable = enable ? BOOLEAN.TRUE : BOOLEAN.FALSE;
-        if (dialog != null) dialog.setCancelable(cancelable == BOOLEAN.TRUE);
+        if (dialog != null) dialog.get().setCancelable(cancelable == BOOLEAN.TRUE);
         return this;
     }
     
@@ -756,11 +806,11 @@ public class InputDialog extends MessageDialog {
         return this;
     }
     
-    public String getHintText() {
+    public CharSequence getHintText() {
         return hintText;
     }
     
-    public InputDialog setHintText(String hintText) {
+    public InputDialog setHintText(CharSequence hintText) {
         this.hintText = hintText;
         refreshView();
         return this;
@@ -818,4 +868,36 @@ public class InputDialog extends MessageDialog {
         refreshView();
         return this;
     }
+    
+    public InputDialog setCustomDialogStyleId(int customDialogStyleId) {
+        if (isAlreadyShown) {
+            error("必须使用 build(...) 方法创建时，才可以使用 setTheme(...) 来修改对话框主题或风格。");
+            return this;
+        }
+        this.customDialogStyleId = customDialogStyleId;
+        return this;
+    }
+    
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
+    }
+    
+    public OnBackClickListener getOnBackClickListener() {
+        return onBackClickListener;
+    }
+    
+    public InputDialog setOnBackClickListener(OnBackClickListener onBackClickListener) {
+        this.onBackClickListener = onBackClickListener;
+        return this;
+    }
+    
+    public ALIGN getAlign() {
+        return align;
+    }
+    
+    public InputDialog setAlign(ALIGN align) {
+        this.align = align;
+        return this;
+    }
 }
+

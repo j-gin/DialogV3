@@ -1,8 +1,14 @@
 package com.kongzue.dialog.util;
 
-import android.graphics.Color;
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.support.v8.renderscript.Element;
+import android.support.v8.renderscript.RenderScript;
+import android.support.v8.renderscript.ScriptIntrinsicBlur;
+import android.util.Log;
 
 import com.kongzue.dialog.interfaces.DialogLifeCycleListener;
+import com.kongzue.dialog.util.view.BlurView;
 
 /**
  * Author: @Kongzue
@@ -14,7 +20,7 @@ import com.kongzue.dialog.interfaces.DialogLifeCycleListener;
 public class DialogSettings {
     
     public enum STYLE {
-        STYLE_MATERIAL, STYLE_KONGZUE, STYLE_IOS
+        STYLE_MATERIAL, STYLE_KONGZUE, STYLE_IOS, STYLE_MIUI
     }
     
     public enum THEME {
@@ -23,6 +29,9 @@ public class DialogSettings {
     
     //是否开启模糊效果
     public static boolean isUseBlur = false;
+    
+    //开启模态化队列启动方式
+    public static boolean modalDialog = false;
     
     //全局主题风格
     public static STYLE style = STYLE.STYLE_MATERIAL;
@@ -51,6 +60,12 @@ public class DialogSettings {
     //全局输入框文本样式
     public static InputInfo inputInfo;
     
+    //全局菜单标题样式
+    public static TextInfo menuTitleInfo;
+    
+    //全局菜单文字样式
+    public static TextInfo menuTextInfo;
+    
     //全局对话框背景颜色，值0时不生效
     public static int backgroundColor = 0;
     
@@ -77,4 +92,55 @@ public class DialogSettings {
     
     //全局提示框背景资源，值0时不生效
     public static int tipBackgroundResId = 0;
+    
+    //对话框，全局按钮资源
+    public static Drawable okButtonDrawable;
+    public static Drawable cancelButtonDrawable;
+    public static Drawable otherButtonDrawable;
+    
+    //输入对话框，是否自动弹出输入键盘
+    public static boolean autoShowInputKeyboard = false;
+    
+    //检查Renderscript支持性
+    public static boolean checkRenderscriptSupport(Context context) {
+        boolean isSupport = true;
+        try {
+            DialogSettings.class.getClassLoader().loadClass("android.graphics.drawable.RippleDrawable");
+            DialogSettings.class.getClassLoader().loadClass("android.support.v8.renderscript.RenderScript");
+        } catch (ClassNotFoundException e) {
+            isSupport = false;
+            if (DEBUGMODE) {
+                Log.e(">>>", "\n错误！\nRenderScript支持库未启用，要启用模糊效果，请在您的app的Gradle配置文件中添加以下语句：" +
+                        "\nandroid { \n...\n  defaultConfig { \n    ...\n    renderscriptTargetApi 17 \n    renderscriptSupportModeEnabled true \n  }\n}");
+            }
+        }
+        
+        RenderScript renderScript = null;
+        ScriptIntrinsicBlur blurScript = null;
+        try {
+            renderScript = RenderScript.create(context);
+            blurScript = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
+        } catch (Exception e) {
+            isSupport = false;
+        } finally {
+            if (renderScript != null) {
+                renderScript.destroy();
+                renderScript = null;
+            }
+            if (blurScript != null) {
+                blurScript.destroy();
+                blurScript = null;
+            }
+        }
+        isUseBlur = isSupport;
+        
+        if (DEBUGMODE) {
+            Log.i(">>>", "检查Renderscript支持性: " + isSupport);
+        }
+        return isSupport;
+    }
+    
+    public static void init() {
+        BaseDialog.reset();
+    }
 }

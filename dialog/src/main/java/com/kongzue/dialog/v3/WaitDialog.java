@@ -2,9 +2,6 @@ package com.kongzue.dialog.v3;
 
 import android.support.v7.app.AppCompatActivity;
 
-import com.kongzue.dialog.interfaces.OnDismissListener;
-import com.kongzue.dialog.util.DialogSettings;
-
 /**
  * Author: @Kongzue
  * Github: https://github.com/kongzue/
@@ -29,5 +26,18 @@ public class WaitDialog extends TipDialog {
     public void show() {
         setDismissEvent();
         showDialog();
+    }
+    
+    public WaitDialog setCustomDialogStyleId(int customDialogStyleId) {
+        if (isAlreadyShown) {
+            error("必须使用 build(...) 方法创建时，才可以使用 setTheme(...) 来修改对话框主题或风格。");
+            return this;
+        }
+        this.customDialogStyleId = customDialogStyleId;
+        return this;
+    }
+    
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
     }
 }

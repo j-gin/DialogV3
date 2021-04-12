@@ -1,17 +1,11 @@
 package com.kongzue.dialog.v3;
 
-import android.app.ActivityManager;
-import android.app.Dialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.os.Looper;
+import android.os.Handler;
 import android.support.annotation.DrawableRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +14,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.kongzue.dialog.R;
+import com.kongzue.dialog.interfaces.OnBackClickListener;
 import com.kongzue.dialog.interfaces.OnShowListener;
 import com.kongzue.dialog.interfaces.OnDismissListener;
 import com.kongzue.dialog.util.BaseDialog;
@@ -29,6 +24,7 @@ import com.kongzue.dialog.util.view.BlurView;
 import com.kongzue.dialog.util.view.ProgressView;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -53,7 +49,7 @@ public class TipDialog extends BaseDialog {
     private OnDismissListener dismissListener;
     
     public static TipDialog waitDialogTemp;
-    private String message;
+    protected CharSequence message;
     private TYPE type;
     private Drawable tipImage;
     
@@ -61,6 +57,7 @@ public class TipDialog extends BaseDialog {
     
     private RelativeLayout boxBody;
     private RelativeLayout boxBlur;
+    private RelativeLayout boxProgress;
     private ProgressView progress;
     private RelativeLayout boxTip;
     private TextView txtInfo;
@@ -82,17 +79,16 @@ public class TipDialog extends BaseDialog {
                     waitDialogTemp = waitDialog;
                 } else {
                     waitDialog = waitDialogTemp;
-                    return null;
                 }
             }
-            waitDialog.log("装载等待对话框");
+            waitDialog.log("装载提示/等待框: " + waitDialog.toString());
             waitDialog.context = new WeakReference<>(context);
             waitDialog.build(waitDialog, R.layout.dialog_wait);
             return waitDialog;
         }
     }
     
-    public static TipDialog showWait(AppCompatActivity context, String message) {
+    public static TipDialog showWait(AppCompatActivity context, CharSequence message) {
         synchronized (TipDialog.class) {
             TipDialog waitDialog = build(context);
             
@@ -150,7 +146,7 @@ public class TipDialog extends BaseDialog {
         }
     }
     
-    public static TipDialog show(AppCompatActivity context, String message, TYPE type) {
+    public static TipDialog show(AppCompatActivity context, CharSequence message, TYPE type) {
         synchronized (TipDialog.class) {
             TipDialog waitDialog = build(context);
             
@@ -182,8 +178,7 @@ public class TipDialog extends BaseDialog {
         return show(context, context.getString(messageResId), type);
     }
     
-    public static TipDialog show(AppCompatActivity context, String message, int icoResId) {
-        Log.e("@@@", "show: " + (waitDialogTemp == null));
+    public static TipDialog show(AppCompatActivity context, CharSequence message, int icoResId) {
         synchronized (TipDialog.class) {
             TipDialog waitDialog = build(context);
             
@@ -216,7 +211,7 @@ public class TipDialog extends BaseDialog {
     }
     
     protected void showDialog() {
-        log("启动等待对话框 -> " + message);
+        log("启动提示/等待框 -> " + toString());
         super.showDialog();
         setDismissEvent();
     }
@@ -225,12 +220,16 @@ public class TipDialog extends BaseDialog {
     
     @Override
     public void bindView(View rootView) {
-        
+        if (boxTip != null) {
+            boxTip.removeAllViews();
+        }
+        if (boxBlur != null) {
+            boxBlur.removeAllViews();
+        }
         this.rootView = rootView;
-        
-        if (boxBlur != null) boxBlur.removeAllViews();
         boxBody = rootView.findViewById(R.id.box_body);
         boxBlur = rootView.findViewById(R.id.box_blur);
+        boxProgress = rootView.findViewById(R.id.box_progress);
         progress = rootView.findViewById(R.id.progress);
         boxTip = rootView.findViewById(R.id.box_tip);
         txtInfo = rootView.findViewById(R.id.txt_info);
@@ -247,6 +246,7 @@ public class TipDialog extends BaseDialog {
         cancelTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                doDismiss();
                 dismiss();
                 cancelTimer.cancel();
             }
@@ -266,10 +266,12 @@ public class TipDialog extends BaseDialog {
                     bkgResId = R.drawable.rect_light;
                     int darkColor = Color.rgb(0, 0, 0);
                     blurFrontColor = Color.argb(blurAlpha, 255, 255, 255);
-                    progress.setStrokeColors(new int[]{darkColor});
+                    if (progress != null) {
+                        progress.setup(R.color.black);
+                    }
                     txtInfo.setTextColor(darkColor);
                     if (type != null) {
-                        progress.setVisibility(View.GONE);
+                        boxProgress.setVisibility(View.GONE);
                         boxTip.setVisibility(View.VISIBLE);
                         switch (type) {
                             case OTHER:
@@ -286,7 +288,7 @@ public class TipDialog extends BaseDialog {
                                 break;
                         }
                     } else {
-                        progress.setVisibility(View.VISIBLE);
+                        boxProgress.setVisibility(View.VISIBLE);
                         boxTip.setVisibility(View.GONE);
                     }
                     break;
@@ -294,10 +296,12 @@ public class TipDialog extends BaseDialog {
                     bkgResId = R.drawable.rect_dark;
                     int lightColor = Color.rgb(255, 255, 255);
                     blurFrontColor = Color.argb(blurAlpha, 0, 0, 0);
-                    progress.setStrokeColors(new int[]{lightColor});
+                    if (progress != null) {
+                        progress.setup(R.color.white);
+                    }
                     txtInfo.setTextColor(lightColor);
                     if (type != null) {
-                        progress.setVisibility(View.GONE);
+                        boxProgress.setVisibility(View.GONE);
                         boxTip.setVisibility(View.VISIBLE);
                         switch (type) {
                             case OTHER:
@@ -314,7 +318,7 @@ public class TipDialog extends BaseDialog {
                                 break;
                         }
                     } else {
-                        progress.setVisibility(View.VISIBLE);
+                        boxProgress.setVisibility(View.VISIBLE);
                         boxTip.setVisibility(View.GONE);
                     }
                     break;
@@ -360,9 +364,12 @@ public class TipDialog extends BaseDialog {
             }
             
             if (customView != null) {
-                progress.setVisibility(View.GONE);
+                boxProgress.setVisibility(View.GONE);
                 boxTip.setBackground(null);
                 boxTip.setVisibility(View.VISIBLE);
+                if (customView.getParent() != null && customView.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) customView.getParent()).removeView(customView);
+                }
                 boxTip.addView(customView);
                 if (onBindView != null) onBindView.onBind(this, customView);
             }
@@ -422,15 +429,31 @@ public class TipDialog extends BaseDialog {
     public static void dismiss() {
         if (waitDialogTemp != null) waitDialogTemp.doDismiss();
         waitDialogTemp = null;
+        List<BaseDialog> temp = new ArrayList<>();
+        temp.addAll(dialogList);
+        for (BaseDialog dialog : temp) {
+            if (dialog instanceof TipDialog) {
+                dialog.doDismiss();
+            }
+        }
     }
     
-    public String getMessage() {
+    public static void dismiss(int millisecond) {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                dismiss();
+            }
+        }, millisecond);
+    }
+    
+    public CharSequence getMessage() {
         return message;
     }
     
-    public TipDialog setMessage(String message) {
+    public TipDialog setMessage(CharSequence message) {
         this.message = message;
-        log("启动等待对话框 -> " + message);
+        log("启动提示/等待框 -> " + toString());
         if (txtInfo != null) txtInfo.setText(message);
         refreshView();
         return this;
@@ -438,7 +461,7 @@ public class TipDialog extends BaseDialog {
     
     public TipDialog setMessage(int messageResId) {
         this.message = context.get().getString(messageResId);
-        log("启动等待对话框 -> " + message);
+        log("启动提示/等待框 -> " + toString());
         if (txtInfo != null) txtInfo.setText(message);
         refreshView();
         return this;
@@ -507,7 +530,7 @@ public class TipDialog extends BaseDialog {
     
     public TipDialog setCancelable(boolean enable) {
         this.cancelable = enable ? BOOLEAN.TRUE : BOOLEAN.FALSE;
-        if (dialog != null) dialog.setCancelable(cancelable == BOOLEAN.TRUE);
+        if (dialog != null) dialog.get().setCancelable(cancelable == BOOLEAN.TRUE);
         return this;
     }
     
@@ -515,12 +538,24 @@ public class TipDialog extends BaseDialog {
         void onBind(TipDialog dialog, View v);
     }
     
+    @Deprecated
     public TextInfo getMessageTextInfo() {
         return messageTextInfo;
     }
     
+    @Deprecated
     public TipDialog setMessageTextInfo(TextInfo messageTextInfo) {
         this.messageTextInfo = messageTextInfo;
+        refreshView();
+        return this;
+    }
+    
+    public TextInfo getTipTextInfo() {
+        return tipTextInfo;
+    }
+    
+    public TipDialog setTipTextInfo(TextInfo tipTextInfo) {
+        this.tipTextInfo = tipTextInfo;
         refreshView();
         return this;
     }
@@ -532,6 +567,28 @@ public class TipDialog extends BaseDialog {
     public TipDialog setBackgroundResId(int backgroundResId) {
         this.backgroundResId = backgroundResId;
         refreshView();
+        return this;
+    }
+    
+    public TipDialog setCustomDialogStyleId(int customDialogStyleId) {
+        if (isAlreadyShown) {
+            error("必须使用 build(...) 方法创建时，才可以使用 setTheme(...) 来修改对话框主题或风格。");
+            return this;
+        }
+        this.customDialogStyleId = customDialogStyleId;
+        return this;
+    }
+    
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode());
+    }
+    
+    public OnBackClickListener getOnBackClickListener() {
+        return onBackClickListener;
+    }
+    
+    public TipDialog setOnBackClickListener(OnBackClickListener onBackClickListener) {
+        this.onBackClickListener = onBackClickListener;
         return this;
     }
 }

@@ -1,11 +1,11 @@
-# Kongzue Dialog V3(Support Ver)
+# Kongzue Dialog V3
 献给要求安卓照着苹果设计稿做开发的产品们（手动滑稽
 
 <a href="https://github.com/kongzue/dialogV3/">
-<img src="https://img.shields.io/badge/Kongzue%20Dialog-3.1.1-green.svg" alt="Kongzue Dialog">
+<img src="https://img.shields.io/badge/Kongzue%20Dialog-3.2.4-green.svg" alt="Kongzue Dialog">
 </a> 
-<a href="https://bintray.com/myzchh/maven/dialogV3/3.1.1/link">
-<img src="https://img.shields.io/badge/Maven-3.1.1-blue.svg" alt="Maven">
+<a href="https://bintray.com/myzchh/maven/dialogV3/3.2.4/link">
+<img src="https://img.shields.io/badge/Maven-3.2.4-blue.svg" alt="Maven">
 </a> 
 <a href="http://www.apache.org/licenses/LICENSE-2.0">
 <img src="https://img.shields.io/badge/License-Apache%202.0-red.svg" alt="License">
@@ -15,6 +15,8 @@
 </a>
 
 ![Kongzue Dialog V3](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_dialog_v3.png)
+
+![Kongzue Dialog V3 MIUI](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_dialog_v3_miui.jpg)
 
 ### Kongzue Dialog V3 的优势
 
@@ -40,7 +42,7 @@ Kongzue Dialog V3 依然会像第二代一样提供多种主题风格选择，�
 我们的组件也会提供许许多多的接口供您自定义对话框的每一点细节，方便而快捷，迅速构建您的程序。
 
 #### 4，模态化&快速创建
-Kongzue Dialog V3 默认即支持模态化窗口模式，即即便从代码一次执行显示多个对话框，实际也会再上一个对话框消失后再显示下一个，以避免对话框叠加造成的混乱情况发生。
+Kongzue Dialog V3 支持模态化窗口模式，启用模态化设置项后，即便从代码一次执行显示多个对话框，实际也会在上一个对话框消失后再显示下一个，以避免对话框叠加造成的混乱情况发生。
 
 另外 Kongzue Dialog 不强制您必须使用 Builder 等方式创建，且为了避免额外的代码量，所有组件均提供了可灵活使用的 show(...) 构造方法，因此只需要输入组件名称，按一下 “.” 按键，即可快速根据提示创建出一个对话框。
 
@@ -48,9 +50,10 @@ Kongzue Dialog V3 默认即支持模态化窗口模式，即即便从代码一�
 
 使用 AlertDialog：
 ```
-android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);         //需要先创建Builder
+//需要先创建Builder
+android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);         
 builder.setTitle(R.string.error_title);
-builder.setCancelable(false);                                                                                                   //每次都需要指定的设置
+builder.setCancelable(false);   //每次都需要指定的设置                                                                                                
 builder.setMessage(R.string.error_not_install_tip);
 builder.setPositiveButton(context.getString(R.string.dialog_iknow_button), new DialogInterface.OnClickListener() {                  
     @Override
@@ -59,45 +62,56 @@ builder.setPositiveButton(context.getString(R.string.dialog_iknow_button), new D
     }
 });
 builder.setNegativeButton(context.getString(R.string.cancel), null);
-builder.show();                                                                                                                 //不要忘记.show()
+//不要忘记.show()
+builder.show();                                                                                                                 
 ```
 
 使用 Kongzue Dialog V3：
 ```
-MessageDialog.show(MainActivity.this, R.string.error_title, R.string.error_not_install_tip, R.string.dialog_iknow_button, R.string.cancel)     //一次性完成所有赋值操作
-        .setOkButton(new OnDialogButtonClickListener() {                                                                        //仅需要对需要处理的按钮进行操作
+//一次性完成所有参数预设操作
+MessageDialog.show(MainActivity.this, R.string.error_title, R.string.error_not_install_tip, R.string.dialog_iknow_button, R.string.cancel)     
+        .setOkButton(new OnDialogButtonClickListener() {  //仅需要对需要处理的按钮进行操作                                                                     
             @Override
             public boolean onClick(BaseDialog baseDialog, View v) {
                 //处理确定按钮事务
-                return false;                                                                                                   //可以通过 return 决定点击按钮是否默认自动关闭对话框
+                return false;    //可以通过 return 决定点击按钮是否默认自动关闭对话框                                                                                               
             }
-        });                                                                                                                     //很多设置可通过全局进行设置，不需要每次都指定
+        }); 
+//很多设置可通过全局进行设置，不需要每次都指定                                                                                                                    
 ```
 
 ## Demo
 
-现已提供 Kongzue Dialog V3 Demo 演示程序供下载体验： <https://fir.im/DialogV3>
+现已提供 Kongzue Dialog V3 Demo 演示程序供下载体验： <http://beta.kongzue.com/DialogV3>
 
 ## 引入
 
+### Support 版本
 Maven仓库：
 ```
 <dependency>
   <groupId>com.kongzue.dialog_v3</groupId>
   <artifactId>dialog</artifactId>
-  <version>3.1.1</version>
+  <version>3.2.4</version>
   <type>pom</type>
 </dependency>
 ```
 Gradle：
 在dependencies{}中添加引用：
 ```
-implementation 'com.kongzue.dialog_v3:dialog:3.1.1'
+implementation 'com.kongzue.dialog_v3:dialog:3.2.4'
 ```
 
 从 Kongzue Dialog V2 升级至 Kongzue Dialog V3，请参考 [Kongzue Dialog V2升级注意事项](kongzue_dialog_v2_upto_v3.md)
 
-⚡ 另外提供 AndroidX 版本，详见 [分支](https://github.com/kongzue/DialogV3/tree/androidx)
+### AndroidX 版本
+
+⚡ 另外提供 AndroidX 版本，源码详见 [分支](https://github.com/kongzue/DialogV3/tree/androidx)
+
+在dependencies{}中添加引用：
+```
+implementation 'com.kongzue.dialog_v3x:dialog:3.2.4'       
+```
 
 ## 全局配置
 在完成引入 Kongzue Dialog V3 库后，首先需要进行一些预先配置，诸如对话框组件整体的风格、主题和字体等，它们都可以在一个工具类中进行配置，说明如下：
@@ -105,10 +119,13 @@ implementation 'com.kongzue.dialog_v3:dialog:3.1.1'
 import com.kongzue.dialog.util.DialogSettings;
 
 DialogSettings.isUseBlur = (boolean);                   //是否开启模糊效果，默认关闭
+DialogSettings.modalDialog = (boolean);                 //是否开启模态窗口模式，一次显示多个对话框将以队列形式一个一个显示，默认关闭
 DialogSettings.style = (DialogSettings.STYLE);          //全局主题风格，提供三种可选风格，STYLE_MATERIAL, STYLE_KONGZUE, STYLE_IOS
 DialogSettings.theme = (DialogSettings.THEME);          //全局对话框明暗风格，提供两种可选主题，LIGHT, DARK
 DialogSettings.tipTheme = (DialogSettings.THEME);       //全局提示框明暗风格，提供两种可选主题，LIGHT, DARK
-DialogSettings.titleTextInfo = (TextInfo);              //全局标题文字样式
+DialogSettings.titleTextInfo = (TextInfo);              //全局对话框标题文字样式
+DialogSettings.menuTitleInfo = (TextInfo);              //全局菜单标题文字样式
+DialogSettings.menuTextInfo = (TextInfo);               //全局菜单列表文字样式
 DialogSettings.contentTextInfo = (TextInfo);            //全局正文文字样式
 DialogSettings.buttonTextInfo = (TextInfo);             //全局默认按钮文字样式
 DialogSettings.buttonPositiveTextInfo = (TextInfo);     //全局焦点按钮文字样式（一般指确定按钮）
@@ -120,9 +137,19 @@ DialogSettings.DEBUGMODE = (boolean);                   //是否允许打印日�
 DialogSettings.blurAlpha = (int);                       //开启模糊后的透明度（0~255）
 DialogSettings.systemDialogStyle = (styleResId);        //自定义系统对话框style，注意设置此功能会导致原对话框风格和动画失效
 DialogSettings.dialogLifeCycleListener = (DialogLifeCycleListener);  //全局Dialog生命周期监听器
-DialogSettings.defaultCancelButtonText = (String);      //设置 BottomDialog 和 ShareDialog 默认“取消”按钮的文字
+DialogSettings.defaultCancelButtonText = (String);      //设置 BottomMenu 和 ShareDialog 默认“取消”按钮的文字
 DialogSettings.tipBackgroundResId = (drawableResId);    //设置 TipDialog 和 WaitDialog 的背景资源
 DialogSettings.tipTextInfo = (InputInfo);               //设置 TipDialog 和 WaitDialog 文字样式
+DialogSettings.autoShowInputKeyboard = (boolean);       //设置 InputDialog 是否自动弹出输入法
+DialogSettings.okButtonDrawable = (drawable);           //设置确定按钮背景资源
+DialogSettings.cancelButtonDrawable = (drawable);       //设置取消按钮背景资源
+DialogSettings.otherButtonDrawable = (drawable);        //设置其他按钮背景资源
+Notification.mode = Notification.Mode.FLOATING_WINDOW;  //通知实现方式。可选 TOAST 使用自定义吐司实现以及 FLOATING_WINDOW 悬浮窗实现方式
+
+//检查 Renderscript 兼容性，若设备不支持，DialogSettings.isUseBlur 会自动关闭；
+boolean renderscriptSupport = DialogSettings.checkRenderscriptSupport(context)
+
+DialogSettings.init(context);                           //初始化清空 BaseDialog 队列
 ```
 
 如果需要开启模糊效果，即 DialogSettings.isUseBlur = true; 需要进行额外 renderscript 配置，需要注意的是在部分低配置手机上此功能效率可能存在问题。
@@ -264,15 +291,15 @@ InputDialog.show(MainActivity.this, "输入对话框", "输入一些内容", "�
 ```
 InputDialog.show(MainActivity.this, "输入对话框", "请输入6位密码", "确定")
         .setInputInfo(new InputInfo()
-                              .setMAX_LENGTH(6)
-                              .setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD)
-                              .setTextInfo(new TextInfo()
-                                                   .setFontColor(Color.RED)
+                              .setMAX_LENGTH(6)     //限制最大输入长度
+                              .setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD)     //仅输入密码类型
+                              .setTextInfo(new TextInfo()       //设置文字样式
+                                                   .setFontColor(Color.RED)     //修改文字样式颜色为红色
                               )
+                              .setMultipleLines(true)       //支持多行输入
         )
 ;
 ```
-
 备注：TextInfo（com.kongzue.dialog.util.TextInfo）类提供了基本的文字样式控制，InputInfo（com.kongzue.dialog.util.InputInfo）类提供了基础的输入文字类型控制。
 
 ### 等待和提示对话框
@@ -373,7 +400,7 @@ BottomMenu.show(MainActivity.this, baseAdapter, new OnMenuItemClickListener() {
 
 ⚠ 特别说明：
 
-Material 风格的 BottomDialog 默认不支持“取消”按钮，按照设计规范，使用下滑手势关闭。
+Material 风格的 BottomMenu 默认不支持“取消”按钮，按照设计规范，使用下滑手势关闭。
 
 ### 通知
 这里的通知并非系统通知，且不具备在您的设备通知栏中持久显示的特性，它本质上是通过对 Toast 进行修改实现的跨界面屏幕顶部提示条。
@@ -400,6 +427,22 @@ Notification.show(MainActivity.this, "提示", "提示信息", R.mipmap.ico_wech
         log("消息溜走了");
     }
 });
+```
+
+在 3.2.2 版本以上，由于最 Android 10+ 对自定义 Toast 进行了屏蔽，可能导致部分功能无法正常工作，您可以通过以下方式修改通知的实现方式：
+```
+Notification.mode = Notification.Mode.TOAST;                //使用自定义 Toast 实现方式
+Notification.mode = Notification.Mode.FLOATING_WINDOW;      //使用悬浮窗实现方式
+```
+使用悬浮窗实现方式默认只能够在一个界面显示通知，您可以在 AndroidManifest.xml 增加以下权限声明来开启跨窗口悬浮窗权限：
+```
+<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+```
+另附申请开启悬浮窗权限的代码：
+```
+Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+intent.setData(Uri.parse("package:" + getPackageName()));
+startActivityForResult(intent, 0);
 ```
 
 ### 分享对话框
@@ -435,6 +478,35 @@ ShareDialog.show(MainActivity.this, itemList, new ShareDialog.OnItemClickListene
 
 Material 风格的 ShareDialog 默认不支持“取消”按钮，按照设计规范，使用下滑手势关闭。
 
+### 全屏对话框
+Kongzue Dialog V3 提供了全屏对话框样式，这种对话框主体采用自定义布局，启动后会占据全屏，可设置标题和标题左右两个按钮。
+
+![Kongzue Dialog V3 自定义对话框](https://github.com/kongzue/Res/raw/master/app/src/main/res/mipmap-xxxhdpi/img_dialog_v3_fullscreen.png)
+
+使用以下代码创建全屏对话框：
+```
+FullScreenDialog
+        .show(MainActivity.this, R.layout.layout_full_login, new FullScreenDialog.OnBindView() {
+            @Override
+            public void onBind(FullScreenDialog dialog, View rootView) {
+                boxUserName = rootView.findViewById(R.id.box_userName);
+                editUserName = rootView.findViewById(R.id.edit_userName);
+                boxPassword = rootView.findViewById(R.id.box_password);
+                editPassword = rootView.findViewById(R.id.edit_password);
+            }
+        })
+        .setOkButton("下一步", nextStepListener)
+        .setCancelButton("取消")
+        .setTitle("登录")
+;
+```
+其中第二个参数为自定义的布局资源 id，第三个参数为布局绑定回调，其余方法与其他 Dialog 一致。
+
+额外的，可自定义 FullScreenDialog 的背景颜色：
+```
+fullScreenDialog.setBackgroundColor(Color.WHITE);
+```
+
 ## 定制化
 
 ### 自定义布局
@@ -461,7 +533,7 @@ MessageDialog.show(MainActivity.this, "提示", "这个窗口附带自定义布�
         .setCustomView(customView);
 ```
 
-目前支持自定义子布局的有：消息对话框组件（MessageDialog）、底部菜单组件（BottomDialog）、输入框组件（InputDialog）、分享对话框（ShareDialog）和通知组件（Notification）
+目前支持自定义子布局的有：消息对话框组件（MessageDialog）、底部菜单组件（BottomMenu）、输入框组件（InputDialog）、分享对话框（ShareDialog）和通知组件（Notification）
 
 ### 自定义对话框
 Kongzue Dialog V3 提供了完全自定义对话框方便快速实现特殊效果的对话框样式。
@@ -506,8 +578,88 @@ CustomDialog.show(MainActivity.this, customView, new CustomDialog.OnBindView() {
 ```
 //全屏幕宽高
 customDialog.setFullScreen(true);
+
+//设置 CustomDialog 处于屏幕的位置
+customDialog.setAlign(CustomDialog.ALIGN.BOTTOM)        //从屏幕底端出现
+customDialog.setAlign(CustomDialog.ALIGN.TOP)           //从屏幕顶端出现
+customDialog.setAlign(CustomDialog.ALIGN.DEFAULT)       //从屏幕中部出现
 ```
+### 自定义对话框按钮背景（颜色）资源：
+除 Material 风格外，iOS 和 Kongzue 风格支持自定义 drawable 的方式修改按钮背景（颜色）资源：
+
+您可以通过以下方式全局指定自定义按钮背景资源：
+```
+//修改确定按钮背景资源：
+DialogSettings.okButtonDrawable = getDrawable(R.drawable.btn_ok);
+//其他按钮：
+DialogSettings.cancelButtonDrawable = getDrawable(R.drawable.btn_cancel);
+DialogSettings.otherButtonDrawable = getDrawable(R.drawable.btn_other);
+```
+也可以单独指定对话框的按钮背景资源：
+```
+//使用资源 id：
+messageDialog.setOkButtonDrawable(resId);
+//或直接使用 drawable：
+messageDialog.setOkButtonDrawable(drawable);
+```
+
+drawable资源可按照如下方式设计：
+btn_ok.xml
+```
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/dialogButtonBlueLightPress" android:state_pressed="true" />
+    <item android:drawable="@color/dialogButtonBlueLight" android:state_focused="false" android:state_pressed="false" />
+    <item android:drawable="@color/dialogButtonBlueLight" android:state_focused="true" />
+    <item android:drawable="@color/dialogButtonBlueLight" android:state_focused="false" />
+</selector>
+```
+其中，dialogButtonBlueLight为默认颜色，dialogButtonBlueLightPress为按下时颜色，请在您的colors.xml资源文件中添加其颜色。
+
 ## 其他设置
+
+### 通用功能
+屏幕顶端、底部弹出
+```
+//从顶部弹出
+Dialog.build(me)
+    .setAlign(BaseDialog.ALIGN.TOP);   
+    
+//从底部弹出 
+Dialog.build(me)
+    .setAlign(BaseDialog.ALIGN.BOTTOM);  
+```
+
+显示时执行
+```
+dialog.setOnShowListener(onShowListener);
+```
+
+关闭时执行
+```
+dialog.setOnDismissListener(onDismissListener);
+```
+
+设置是否可以点击外部区域或“返回”按键关闭对话框：
+```
+dialog.setCancelable(boolean);       
+```
+
+设置“返回”按键监听
+```
+dialog.setOnBackClickListener(new OnBackClickListener() {
+    @Override
+    public boolean onBackClick() {
+        toast("按下返回！");
+        return true;        //return 结果代表是否拦截此事件
+    }
+});
+```
+
+使用自定义的 Dialog style
+```
+dialog.setCustomDialogStyleId(R.style.XXX);
+```
 
 ### 文字样式
 因文字样式牵扯的属性较多，因此提供了封装类 `TextInfo（com.kongzue.dialog.util.TextInfo）`来进行。
@@ -543,10 +695,11 @@ MessageDialog.show(MainActivity.this, "提示", "这个窗口附带自定义布�
 ```
 InputDialog.show(MainActivity.this, "提示", "请输入密码（123456）", "确定", "取消")
     .setInputInfo(new InputInfo()       //设置输入样式
-        .setMAX_LENGTH(6)
-        .setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD)
-        .setTextInfo(new TextInfo()
-                             .setFontColor(Color.RED)
+        .setSelectAllText(true)                                     //默认选中全部文字
+        .setMAX_LENGTH(6)                                           //最大允许6个字
+        .setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD)       //密码类型
+        .setTextInfo(new TextInfo()     //设置文字样式
+                             .setFontColor(Color.RED)               //颜色指定为红色
         )
 ;
 ```
@@ -586,7 +739,7 @@ TipDialog.show(MainActivity.this, "成功！", TipDialog.TYPE.SUCCESS).setOnDism
 dialog.setBackgroundResId(int resId);
 ```
 
-## 有关于内存泄漏和其他的一些建议
+## 一些建议
 
 ### 关于内存泄漏问题
 
@@ -606,6 +759,38 @@ android:configChanges="orientation|keyboardHidden|screenSize"
 ```
 这可以确保您的 Activity 不受重启影响自动适应横竖屏切换并保证 Kongzue Dialog V3 能够正常运行。
 
+### 常见问题
+
+**Q：如何检查是否支持即时模糊（Renderscript）？**
+
+A：请执行 DialogSettings.checkRenderscriptSupport(context) 方法检查，如果支持，isUseBlur 会自动被设置为 true，反之会被关闭。
+
+**Q：为什么不支持非Activity作为Context？为什么只支持AppCompatActivity而不支持普通Activity？**
+
+A：不支持非 Activity 是因为 Android 在的限制，Dialog 必须基于 Activity 显示，并且受到 Activity 的生命周期管理。
+
+如果想“凭空”显示出 Dialog，可以考虑使用透明主题的 Activity，再在其上显示 Dialog，即在 manifest 中设置 Activity 的 theme 为自定义的透明主题，具体代码如下：
+```
+<style name="activityTransparent" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="android:windowBackground">@color/transparent</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowIsTranslucent">true</item>
+</style>
+```
+对于为什么只支持 AppCompatActivity 而不支持普通 Activity，是因为需要使用到 SupportFragmentManager()，而它是 AppCompatActivity 中才能提供的。
+
+**Q：Dialog不启动，不显示**
+
+A：首先请检查您传入的 Context 是否为已回收的上下文索引，然后尝试使用 `BaseDialog.unload();` 清空内存队列，如果还是不显示，请提交 issues 返回问题，记得备注您的创建 Dialog 代码。
+
+**Q：显示位置或大小异常**
+
+A：您可能是用了第三方的屏幕适配方案，例如头条适配方案，此问题是适配方案导致的，请查询适配方案是否有解决办法，DialogV3 库主要支持标准适配方案，在第三方适配方案下可能存在显示问题。
+
+**Q：API-29（AndroidQ）下，通知（Notification）组件无法显示**
+
+A：经查证是 Google 在 API-29 下限制了反射功能导致的，Notification 组件是依赖反射修改 Toast 来完成跨域悬浮显示功能的，您可以修改项目 targetSdkVersion 为 28 来解决此问题。
+
 ## 混淆设置
 为避免不必要的问题，可以将以下代码加入 proguard-rules.pro 文件中。
 ```
@@ -614,6 +799,14 @@ android:configChanges="orientation|keyboardHidden|screenSize"
 
 # 额外的，建议将 android.view 也列入 keep 范围：
 -keep class android.view.** { *; }
+
+# 如果有开启模糊效果，建议将 Renderscript 也列入 keep 范围：
+-dontwarn android.support.v8.renderscript.**
+-keep public class android.support.v8.renderscript.** { *; }
+
+# AndroidX版本请使用如下配置：
+-dontwarn androidx.renderscript.**
+-keep public class androidx.renderscript.** { *; }
 ```
 
 ## 开源协议
@@ -634,8 +827,95 @@ limitations under the License.
 ```
 
 ## 更新日志：
+v3.2.4.2(beta):
+- 修复BottomMenu设置setMenuTextList(...)时出错的问题；
+- 修复BaseDialog中存在的偶发性启动空指针问题（219行）；
+- 修复BottomMenu在Material主题时，设置cancelable = false时依然可以下划关闭的问题；
+
+v3.2.4:
+- BottomMenu 新增 List<String> 构造方法；
+- BottomMenu 新增 setMenuTextStringList(...) 设置菜单的方法；
+- 修复 DialogHelper 引发的 BaseDialog 中的空指针异常；
+
+v3.2.3:
+- 优化对话框在全屏 Activity 上启动时保持隐藏状态栏、导航栏的显示方式；
+- 修复 CustomDialog 全屏模式在挖孔屏设备上无法完全全屏的问题；
+- 修复 FullscreenDialog 自定义布局无法滑动操作的问题；
+- 修复 BottomMenu 在处于 MIUI 主题时的点击穿透问题；
+- 新增 BottomMenu setCancelButtonDrawable(...) 方法可设置取消按钮样式；
+
+v3.2.2:
+- 新增 Notification.mode 通知实现方式修改，具体请参照章节 <a href="#通知">通知</a>；
+- 所有组件的文本入参方式由 String 修改为 CharSequence，以支持更多的文本形式；
+- 修复其他 bug；
+
+v3.2.1:
+- 修复 BottomDialog 以及 ShareDialog 底部导航栏折叠问题；
+
+v3.2.0:
+- 调整对齐方式，为所有非提示和等待的 Dialog 组件提供 setAlign(...) 自定义屏幕顶端/底部的额外设置；
+- 新增 MIUI12 主题；
+- 修复其他 bug；
+
+v3.1.9:
+- 增加全局设置，可修改对话框按钮背景资源；
+- InputInfo 新增 selectAllText 设置，可实现启动对话框后默认选中已输入的文字；
+- BottomMenu 新增 onCancelButtonClickListener 设置，可监听或拦截“取消”按钮点击事件；
+- 修复部分情况下 InputDialog 对话框关闭输入法不消失的 bug；
+
+v3.1.8:
+- 完善 DialogSettings.checkRenderscriptSupport(context) 判断 Renderscript 支持性逻辑；
+- CustomDialog 创建布局默认使用 WRAP_CONTENT 的 LayoutParams；
+- 修复 TipDialog 或 WaitDialog 在执行 dismiss() 方法时可能出现的异常；
+- 修复 BaseDialog 存在的 dialog 空指针异常；
+
+v3.1.7:
+- BottomMenu 的 Material 和 Kongzue 风格新增暗色模式；
+- FullScreenDialog 新增 setBackgroundColor(colorInt) 设置背景颜色；
+- FullScreenDialog 新增暗色模式；
+- ShareDialog 新增暗色模式；
+- 修复 TipDialog 启动时可能触发的空指针异常以及自定义布局时可能存在的子布局未卸载异常；
+- 修复 onBackClickListener 可能触发两次的bug；
+- 修复执行 doDismiss() 方法时可能触发的空指针异常；
+
+v3.1.6:
+- 新增 FullScreenDialog 全屏对话框；
+- Dialog 组件新增 setOnBackClickListener(onBackClickListener) 可监听“返回”按键，并允许阻止“返回”按键操作；
+- 改进刘海屏适配，Notification 通知组件和 FullScreenDialog 全屏对话框组件的背景部分可实现刘海部分的完美沉浸；
+- 修复 InputDialog 在 Material 主题时开启 DialogSettings.autoShowInputKeyboard 设置后键盘不自动弹出的问题；
+- 修复 InputDialog 在 Material 主题时输入框的主题颜色适配问题，已知问题：因 Google 在新版本系统中增加反射限制，已知输入框光标颜色暂时无法适配颜色；
+- 对 BottomMenu、ShareDialog 代码重新进行整理；
+
+v3.1.5:
+- 新增 DialogSettings.autoShowInputKeyboard 设置开启时，InputDialog 将自动弹出输入法；
+- 修复 WaitDialog 等待对话框动画在切换至后台再切换至前台恢复显示后消失的问题；
+- 修复 BottomMenu 在屏内虚拟导航按键的设备上隐藏虚拟导航按键情况下使用时底部依然存在虚拟导航栏高度的问题；
+- 修复 Notification 在部分刘海屏设备上存在的顶部额外安全区高度空留问题；
+
+v3.1.4:
+- BottomMenu 新增标题字体控制 menuTitleInfo 和菜单字体控制 menuTextInfo，也可通过全局（DialogSettings）设置；
+- 新增模态模式开关 `DialogSettings.modalDialog`，关闭后对话框会以正常方式启动；
+- 再次优化内存泄漏问题，对 DialogHelper 的释放问题进行了改进；
+- 修复了 customDialog.getAlign() 空指针异常的问题；
+- 修复 ShareDialog 在华为设备上使用 Material 风格时的点击按钮无效问题；
+
+v3.1.3:
+- CustomDialog 新增 `setAlign(Align)` 方法，可设置显示在顶部、底部或默认位置；
+- InputDialog 支持多行内容输入，请通过 `.setInputInfo(new InputInfo().setMultipleLines(true))` 设置开启；
+- 所有 Dialog 支持通过 `setCustomDialogStyleId(styleId)` 自定义 Dialog 样式；
+- DialogSettings 新增 `init(Context)` 方法，用于初始化 BaseDialog 队列并检查 Renderscript 兼容性，此方法建议在 Activity 的 onCreate 执行；
+- 增强日志打印信息以协助排查可能存在的问题；
+
+v3.1.2:
+- 底部菜单 BottomMenu 中，Material 风格升级为 Android Q 风格；
+- 底部菜单 BottomMenu 和分享对话框 ShareDialog 中，Material 风格与 Kongzue 风格支持底部导航栏沉浸式；
+- 底部菜单 BottomMenu 在内容过多的情况下只占用2/3屏幕高度，且支持列表滚动；
+- 修复底部菜单 BottomMenu 中，Material 风格在部分华为手机上的触控兼容性问题；
+- 修复了TipDialog存在的关闭问题；
+- 修复了输入对话框偶发设置inputInfo空指针问题；
+
 v3.1.1:
-- 新增 DialogSettings.defaultCancelButtonText 可设置 BottomDialog 和 ShareDialog 默认“取消”按钮的文字；
+- 新增 DialogSettings.defaultCancelButtonText 可设置 BottomMenu 和 ShareDialog 默认“取消”按钮的文字；
 - 新增 DialogSettings.tipBackgroundResId 可设置 TipDialog 和 WaitDialog 的背景资源；
 - 新增 DialogSettings.tipTextInfo 可设置 TipDialog 和 WaitDialog 文字样式；
 - 修复 ShareDialog 可能存在的 Android 5- 版本崩溃问题；

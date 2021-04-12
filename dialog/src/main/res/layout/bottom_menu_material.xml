@@ -4,25 +4,33 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.kongzue.dialog.util.view.MaterialTouchView
+    <LinearLayout
         android:id="@+id/box_body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:visibility="gone"
+        android:background="@drawable/rect_bottom_dialog"
         android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/img_tab"
+            android:layout_width="30dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="15dp"
+            android:src="@drawable/rect_share_material_tab"/>
 
         <TextView
             android:id="@+id/txt_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:layout_marginLeft="15dp"
-            android:layout_marginRight="15dp"
+            android:layout_marginLeft="20dp"
+            android:visibility="gone"
+            android:layout_marginRight="20dp"
             android:layout_marginTop="10dp"
             android:text=""
             android:textColor="@color/tipTextColor"
-            android:textSize="12dp"
-            android:visibility="gone" />
+            android:textSize="12dp" />
 
         <RelativeLayout
             android:id="@+id/box_custom"
@@ -35,8 +43,9 @@
             android:id="@+id/list_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:divider="@color/empty"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:dividerHeight="1px"></ListView>
 
         <LinearLayout
@@ -76,6 +85,6 @@
 
         </LinearLayout>
 
-    </com.kongzue.dialog.util.view.MaterialTouchView>
+    </LinearLayout>
 
 </LinearLayout>
